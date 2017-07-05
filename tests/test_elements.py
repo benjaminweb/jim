@@ -37,7 +37,7 @@ def test_sanitise_name(unclean, sanitised):
 @pytest.mark.parametrize('hours, mins', [[1, 2], [23, 10]])
 def test_hmins2epoch(hours, mins):
     now = pendulum.now(tz='Europe/Berlin').replace(hour=hours, minute=mins)
-    assert hmins2epoch(hours, mins) == now.format('%s')
+    assert hmins2epoch(hours, mins) == now.format('X', formatter='alternative')
 
 
 @pytest.mark.parametrize('string, delay', [['', None], ['0', 0], ['1', 1]])
