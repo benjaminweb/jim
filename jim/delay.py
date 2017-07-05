@@ -49,4 +49,4 @@ def get_thresholds(keys):
         keys (iterable): Iterable, that is the result of
           :func:`delay_segments.keys()`.
     """
-    return list(filter(lambda x: not isinstance(x, str), keys))
+    return sorted(list(filter(lambda x: not isinstance(x, str), keys)))
