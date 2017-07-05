@@ -1,0 +1,22 @@
+env:
+  global:
+    - TWINE_USERNAME=bwe
+
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+install: pip install -r requirements.txt tox-travis
+
+script:
+  - tox
+  - pip install --upgrade pip setuptools wheel
+  - python setup.py sdist bdist_wheel
+  # the following is stolen from https://github.com/joerick/pyinstrument_cext/blob/master/.travis.yml
+  # uncomment to push wheels automatically to pypi for tagged releases only (requires TWINE_PASSWORD to be set)
+  # - |
+  #   if [[ $TRAVIS_TAG ]]; then
+  #     python -m pip install twine
+  #     python -m twine upload dist/*.whl
+  #   fi

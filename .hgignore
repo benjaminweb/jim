@@ -1,0 +1,11 @@
+syntax: glob
+*.pyc
+__pycache__
+venv
+build
+.*.swp
+*~
+.tox
+.coverage*
+*.egg-info
+.cache
