@@ -1,6 +1,13 @@
 jim
 ***
 
+.. image:: https://img.shields.io/travis/benjaminweb/jim.svg?style=flat-square  :target: https://travis-ci.org/benjaminweb/jim
+  :alt: Linux Built Status
+
+.. image:: https://img.shields.io/appveyor/ci/hyllos/jim/default.svg?style=flat-square
+  :target: https://ci.appveyor.com/project/hyllos/jim
+  :alt: Windows Built Status
+
 The German railways system at your fingertips.
 
 Install
