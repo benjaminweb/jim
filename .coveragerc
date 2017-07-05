@@ -1,0 +1,9 @@
+[run]
+branch = True
+source = jim
+
+[paths]
+source =
+    jim
+    .tox/*/lib/python*/site-packages/jim
+    .tox/pypy*/site-packages/jim
