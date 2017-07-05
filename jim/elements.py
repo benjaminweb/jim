@@ -26,7 +26,7 @@ def sanitise_name(name):
 def hmins2epoch(hours, mins):
     """Returns epoch for hours, mins."""
     timing = pendulum.now(tz='Europe/Berlin').replace(hour=hours, minute=mins)
-    return timing.format('%s')
+    return timing.format('X', formatter='alternative')
 
 
 def get_delay(string):
