@@ -1,4 +1,4 @@
-import arrow
+import pendulum
 import requests
 import regex
 
@@ -25,8 +25,8 @@ def sanitise_name(name):
 
 def hmins2epoch(hours, mins):
     """Returns epoch for hours, mins."""
-    timing = arrow.now(tz='Europe/Berlin').replace(hour=hours, minute=mins)
-    return timing.format('X')
+    timing = pendulum.now(tz='Europe/Berlin').replace(hour=hours, minute=mins)
+    return timing.format('%s')
 
 
 def get_delay(string):
