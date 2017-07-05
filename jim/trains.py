@@ -5,6 +5,7 @@ import json
 import threading
 import regex
 
+import urllib
 from jim.elements import (Connection, split_name, sanitise_name, uniq,
                           get_train_details)
 
@@ -128,9 +129,11 @@ class RailGrid:
 
 def search_train(name):
     """Get train link for a train name."""
+    quoted_name = urllib.parse.quote(name)
     url = ('http://www.apps-bahn.de/bin/livemap/trainsearch-livemap.exe/'
-           'dny?L=vs_livefahrplan&livemapTrainfilter=yes&jetztInlandOnly=yes'
-           '&combineMode=5&productClassFilter=15&trainname={}'.format(name))
+           'dny?L=vs_livefahrplan&livemapTrainfilter=yes&jetztInlandOnly=yes&'
+           'combineMode=5&productClassFilter=15&'
+           'trainname={}'.format(quoted_name))
     rq = requests.get(url)
     raw_content = rq.content.decode(rq.encoding).replace('TSLs.sls =', '')
     print(raw_content)

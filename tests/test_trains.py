@@ -110,7 +110,7 @@ def test_search_train(train_search):
                         'trainsearch-livemap.exe/dny?L=vs_livefahrplan&'
                         'livemapTrainfilter=yes&jetztInlandOnly=yes&'
                         'combineMode=5&productClassFilter=15&'
-                        'trainname=ICE 9557')
+                        'trainname=ICE%209557')
     responses.add(responses.GET, train_search_url, body=train_search,
                   match_querystring=True)
     assert search_train('ICE 9557') == \
@@ -139,7 +139,7 @@ def test_search_train(train_search):
 def test_get_train_link(train_search):
     url = ('http://www.apps-bahn.de/bin/livemap/trainsearch-livemap.exe/'
            'dny?L=vs_livefahrplan&livemapTrainfilter=yes&jetztInlandOnly=yes'
-           '&combineMode=5&productClassFilter=15&trainname=ICE 9557')
+           '&combineMode=5&productClassFilter=15&trainname=ICE%209557')
     responses.add(responses.GET, url, body=train_search,
                   match_querystring=True)
     assert get_train_link('ICE 9557') == '221658/261813/991658/421943/80'
@@ -151,7 +151,7 @@ def test_get_train_info(train_search, train_link):
                         'trainsearch-livemap.exe/dny?L=vs_livefahrplan&'
                         'livemapTrainfilter=yes&jetztInlandOnly=yes&'
                         'combineMode=5&productClassFilter=15&'
-                        'trainname=ICE 9557')
+                        'trainname=ICE%209557')
     train_link_url = ('http://www.apps-bahn.de/bin/livemap/query-livemap.exe/'
                       'dny?L=vs_livefahrplan&tpl=singletrain2json&'
                       'performLocating=8&look_nv=get_rtmsgstatus'
