@@ -90,8 +90,8 @@ class RailGrid:
             national (bool, default self.national): Includes
               national, meaning long distance trains if `True`.
         """
-        self.regional = regional if not None else self.regional
-        self.national = national if not None else self.national
+        self.regional = regional if regional is not None else self.regional
+        self.national = national if national is not None else self.national
         self.trains = self.pull_trains(self.regional, self.national)
 
     def pull_trains(self, regional, national):

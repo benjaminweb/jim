@@ -102,6 +102,8 @@ def test_RailGrid(regional, national, count):
     # to test refresh, change input
     responses.add(responses.GET, tile_url(1), json=mock('1_later'),
                   match_querystring=True)
+    rg.refresh()
+    assert len(rg.trains) == count
     rg.refresh(regional=False, national=True)
     assert len(rg.trains) == 298
 
