@@ -2,6 +2,7 @@ from pytest import approx
 
 import responses
 
+from jim import RailGrid
 from jim.delay import get_thresholds, to_increments, delay_segments
 
 from tests.test_trains import tile_url, mock
@@ -12,9 +13,8 @@ def test_delay_segments():
     for tile in range(1, 24):
         responses.add(responses.GET, tile_url(tile), json=mock(tile),
                       match_querystring=True)
-    the_segments = delay_segments()
-    print(the_segments)
-    assert delay_segments() == approx(
+    GridObject = RailGrid(regional=True, national=True)
+    assert delay_segments(GridObject) == approx(
       {5: 0.22540592168099333,
        15: 0.05253104106972302,
        30: 0.017191977077363897,
