@@ -4,6 +4,7 @@ import requests
 import json
 import threading
 import regex
+import backoff
 
 import urllib
 from jim.elements import (Connection, split_name, sanitise_name, uniq,
@@ -17,7 +18,8 @@ class TileError(Exception):
     def __str__(self):
         return self.message
 
-
+@backoff.on_exception(backoff.expo,
+                      requests.exceptions.RequestException, max_tries=2)
 def get_tile(tile=1):
     """Retrieve trains for tile no ranging from 1 through 23, including.
 
@@ -32,18 +34,18 @@ def get_tile(tile=1):
            'dny?L=vs_livefahrplan&performLocating=1&'
            'performFixedLocating={}'.format(tile))
     trains = []
-    try:
-        for connection in requests.get(url).json()[0][:-1]:
-            try:
-                trains.append(Connection(connection))
-            # skip those (train) `Connections` without a valid
-            # station_id (meta stuff?)
-            except ValueError:
-                pass
-        return trains
-    except json.decoder.JSONDecodeError:
-        raise requests.ConnectionError('{} could not be '
-                                       'retrieved properly'.format(url))
+    rq = requests.get(url)
+    connections = rq.content.decode('ISO-8859-1')
+    print(connections[193920:193950])
+    connections = connections.replace('\\x', '\\u00').replace("\\\'", "\'")
+    for connection in json.loads(connections)[0][:-1]:
+        try:
+            trains.append(Connection(connection))
+        # skip those (train) `Connections` without a valid
+        # station_id (meta stuff?)
+        except ValueError:
+            pass
+    return trains
 
 
 def list_append(tile, out_list):

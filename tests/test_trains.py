@@ -58,6 +58,15 @@ def test_get_tile_invalid(tile):
     with pytest.raises(TileError):
         get_tile(tile)
 
+@responses.activate
+def test_get_tile_fix_escape():
+    with open(resource_filename(__name__, 'mocks/18_escape.json')) as f:
+        the_escaped = f.read()
+    responses.add(responses.GET, tile_url(18), body=the_escaped,
+                  match_querystring=True)
+    # should not raise an error
+    assert get_tile(18)
+
 
 @responses.activate
 def test_get_tile_conn_err():
