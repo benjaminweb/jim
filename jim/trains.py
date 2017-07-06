@@ -36,7 +36,6 @@ def get_tile(tile=1):
     trains = []
     rq = requests.get(url)
     connections = rq.content.decode('ISO-8859-1')
-    print(connections[193920:193950])
     connections = connections.replace('\\x', '\\u00').replace("\\\'", "\'")
     for connection in json.loads(connections)[0][:-1]:
         try:
