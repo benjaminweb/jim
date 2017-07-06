@@ -72,7 +72,7 @@ def test_get_tile_fix_escape():
 def test_get_tile_conn_err():
     responses.add(responses.GET, tile_url(1), body='TSLs = {}',
                   match_querystring=True)
-    with pytest.raises(requests.ConnectionError):
+    with pytest.raises(json.decoder.JSONDecodeError):
         get_tile(1)
 
 
