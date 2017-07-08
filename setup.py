@@ -10,5 +10,12 @@ setup(
     author_email='mail@bwe.im',
     license='MIT',
     install_requires=['pendulum', 'regex', 'requests', 'backoff'],
-    extras_require={'test': ['responses']}
+    extras_require={'test': ['responses']},
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+    ],
+    keywords='bahn train traffic'
 )
