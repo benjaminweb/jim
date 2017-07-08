@@ -1,12 +1,17 @@
 jim
 ***
 
-.. image:: https://img.shields.io/travis/benjaminweb/jim.svg?style=flat-square  :target: https://travis-ci.org/benjaminweb/jim
+.. image:: https://img.shields.io/travis/benjaminweb/jim.svg?style=flat-square
+  :target: https://travis-ci.org/benjaminweb/jim
   :alt: Linux Built Status
 
 .. image:: https://img.shields.io/appveyor/ci/hyllos/jim/default.svg?style=flat-square
   :target: https://ci.appveyor.com/project/hyllos/jim
   :alt: Windows Built Status
+
+.. image:: https://img.shields.io/codecov/c/bitbucket/hyllos/jim/default.svg?style=flat-square
+  :target: https://codecov.io/bb/hyllos/jim/branch/default
+  :alt: Code coverage
 
 The German railways system at your fingertips.
 
