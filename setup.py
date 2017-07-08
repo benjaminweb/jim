@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='jim',
+    packages=['jim'],
     version='0.0.1',
     description='library to retrieve data from German railways',
     url='https://bitbucket.org/hyllos/jim',
