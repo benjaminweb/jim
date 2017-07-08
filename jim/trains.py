@@ -49,7 +49,7 @@ def get_tile(tile=1):
             raw_trains.append(connection)
         # skip those (train) `Trains` without a valid
         # station_id (meta stuff?)
-        except ValueError:
+        except (TypeError, ValueError):
             pass
     return raw_trains
 

@@ -77,6 +77,29 @@ def test_get_tile_conn_err():
         get_tile(1)
 
 
+@responses.activate
+@pytest.mark.parametrize('x, count', [[519552478, 1], ['"519552478b"', 0]])
+def test_get_tile_ValueError_pass(x, count):
+    src = ("""[[["ICE 1277", {}, 1282578479,""".format(x)
+           + """"84/330759/18/19/80","""
+           """"22", 1, "0", "Z\u00fcrich HB",[[0, 0, -90000, "", "0","""
+           """null, null], [0, 0, 90000, "", "0", null, null], [0, 0,"""
+           """90068, "", "0", null, null]], "Frankfurt(Main)S\u00fcd","""
+           """"8002041", "Mannheim Hbf", "8000244","05.07.17", "1","""
+           """null, "16:48", "16:05", "1", "0", "0", null, null],"""
+           """["IC   122","1168717749b",1158501416,"84/266508/18/19/80","""
+           """"25",2,"5","Gouvy",[],"Trois-Ponts","8800088","Vielsalm","""
+           """"8800274","08.07.17","-1",null,"23:13","23:01","5","0","""
+           """"4",null,null]]]""")
+    responses.add(responses.GET, tile_url(1), body=src.encode('ISO-8859-1'),
+                  match_querystring=True)
+    raw_trains = get_tile(1)
+    # single hit if no letter in x coordinate
+    # (the second entry will be removed (since the original
+    # carries meta info through it)
+    assert len(raw_trains) == count
+    
+
 def test_list_append():
     out_list = []
     list_append(1, out_list)
