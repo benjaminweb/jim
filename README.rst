@@ -25,7 +25,7 @@ Install
 Quick Start
 ===========
 
-To get all currently running national trains:
+To get all currently running trains:
 
 .. code-block:: python
 
@@ -46,8 +46,8 @@ Let's pick an ICE::
     >>> an_ice
     <ICE 1086 to Berlin Südkreuz>
 
-Each train is a :class:`Train` class.
-You can retrieve it's next station like::
+Each train is a `Train` class.
+You can retrieve its next station like::
 
     >>> an_ice.next_station
     <20:26 -> Hamburg Dammtor>
@@ -71,7 +71,7 @@ If delay data is available, it will be stored here::
 Advanced
 ========
 
-You can refresh a :class:`jim.trains.RailGrid` class::
+You can refresh a `jim.trains.RailGrid` class::
 
     >>> bahn.refresh()
     >>> bahn
