@@ -51,7 +51,7 @@ connections = [
                   2, '0', 'Basel SBB', [], 'Zürich HB', '8503000',
                   'Basel SBB', '8500010', '01.07.17', '-1', None, '19:32',
                   '18:34', None, '0', '4', None, None],
-                 0, None, False],
+                 0, None, False, 2],
                 [['ICE  376', 1411364960, 720056790, '84/330686/18/19/80', '7',
                   1, '0', 'Frankfurt(Main)Hbf',
                   [
@@ -72,7 +72,7 @@ connections = [
                   'Karlsruhe Hbf', '8000191', 'Mannheim Hbf',
                   '8000244', '01.07.17', '147', None,
                   '19:10', '18:48', '0', '0', '2', None, None],
-                 0, 0, False],
+                 0, 0, False, 1],
                 [['ICE  729', 23526725, 764310905,
                   '84/122384/18/19/80', '28', 1, '', 'München Hbf',
                   [
@@ -108,7 +108,7 @@ connections = [
                   'Frankfurt(M) Flughafen Fernbf',
                   '8070003', '01.07.17', '-1', None, '19:33', '18:44',  None,
                  None, '4', None, None],
-                 None, None, False],
+                 None, None, False, 1],
                 [['RB 38735', 1093674136, 741917159, '84/322819/18/19/80',
                   '29', 8, '7', 'Bensheim',
                   [
@@ -126,18 +126,20 @@ connections = [
                   'Ludwigshafen(Rh)Hbf', '8000236',
                   '07.07.17', '2', None, '12:37', '12:32',
                   '7', '7', '0', None, None],
-                7, 7, True]
+                7, 7, True, 8]
 ]
 
 
 @pytest.mark.parametrize('connection, delay, next_station_delay,'
-                         'regional', connections)
-def test_Train(connection, delay, next_station_delay, regional):
+                         'regional, train_class', connections)
+def test_Train(connection, delay, next_station_delay,
+               regional, train_class):
     train = Train(connection)
     assert train.delay == delay
     assert train.next_station.delay == next_station_delay
     assert train.train_link == connection[3]
     assert train.regional == regional
+    assert train.train_class == train_class
 
 
 @responses.activate
