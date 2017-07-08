@@ -78,9 +78,9 @@ def get_subset(values, lower=None, upper=None):
         lower (number, default None): Lower bound (including) to filter values.
         upper (number, default None): Upper bound (excluding) to filter values.
     """
-    if lower is None:
+    if lower is None and upper is not None:
         subset = filter(lambda v: v < upper, values)
-    elif upper is None:
+    elif lower is not None and upper is None:
         subset = filter(lambda v: v >= lower, values)
     elif lower is not None and upper is not None:
         subset = filter(lambda v: v >= lower and v < upper, values)
