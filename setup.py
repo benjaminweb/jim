@@ -8,5 +8,6 @@ setup(
     author='Benjamin Weber',
     author_email='mail@bwe.im',
     license='MIT',
-    packages=find_packages(exclude=['tests']),
+    install_requires=['pendulum', 'regex', 'requests', 'backoff'],
+    extras_require={'test': ['responses']}
 )
