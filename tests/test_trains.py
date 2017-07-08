@@ -6,8 +6,8 @@ import json
 import requests
 import responses
 
-from jim.trains import (get_tile, list_append, TileError, RailGrid,
-                        search_train, get_train_link, get_train_info)
+from jim.trains import (get_tile, list_append, TileError, collect_raw_trains,
+                        RailGrid, search_train, get_train_link, get_train_info)
 
 
 def mock(tile):
@@ -58,6 +58,7 @@ def test_get_tile_invalid(tile):
     with pytest.raises(TileError):
         get_tile(tile)
 
+
 @responses.activate
 def test_get_tile_fix_escape():
     with open(resource_filename(__name__, 'mocks/18_escape.json')) as f:
@@ -82,37 +83,71 @@ def test_list_append():
     assert len(out_list) > 0
 
 
-RailGrid_data = [
-    [True, False, 2368],
-    [False, True, 298],
-    [True, True, 2369]
-]
-
-
 @responses.activate
-@pytest.mark.parametrize('regional, national, count',
-                         RailGrid_data)
-def test_RailGrid(regional, national, count):
+def test_collect_raw_trains():
     for tile in range(1, 24):
         responses.add(responses.GET, tile_url(tile), json=mock(tile),
                       match_querystring=True)
-    rg = RailGrid(regional, national)
-    assert len(rg.trains) == count
+    raw_trains = collect_raw_trains()
+    assert len(raw_trains) == 5276
+    #assert ['ICE 1277', 583304368, 525537887, '84/330759/18/19/80', '22', 1, '0',
+    #        'Zürich HB', [[0, 0, -131000, '', '0', None, None], [0, 0, 49000, '',
+    #        '0', None, None], [0, 0, 49068, '', '0', None, None]],
+    #        'Frankfurt(Main)Süd', '8002041', 'Mannheim Hbf', '8000244',
+    #       '05.07.17', '2', None, '16:48', '16:05', '1', '0', '0', None, None] \
+    #  in raw_trains
+
+
+@responses.activate
+def test_RailGrid():
+    for tile in range(1, 24):
+        responses.add(responses.GET, tile_url(tile), json=mock(tile),
+                      match_querystring=True)
+    rg = RailGrid()
+    assert len(rg.trains) == 2369
 
     # to test refresh, change input
     responses.add(responses.GET, tile_url(1), json=mock('1_later'),
                   match_querystring=True)
     rg.refresh()
-    assert len(rg.trains) == count
-    rg.refresh(regional=False, national=True)
-    assert len(rg.trains) == 298
-
-    # test filter
-    assert len(rg.filter('IC 2045')) == 1
-    assert len(rg.filter('IC')) == 270
+    assert len(rg.trains) == 2369
 
     # test repr
-    assert rg.__repr__() == '<298 trains>'
+    assert rg.__repr__() == '<2369 trains>'
+
+
+@responses.activate
+def test_RailGrid_collect_raw_trains():
+    for tile in range(1, 24):
+        # mock(1) to simulate nationals only (to produce
+        # result distinct to all tiles, that is for non raw_trains test)
+        responses.add(responses.GET, tile_url(tile), json=mock(1),
+                      match_querystring=True)
+    # result will have not 3000 less since redundancies abound
+    raw_trains = collect_raw_trains()
+    rg = RailGrid(raw_trains=raw_trains)
+    assert len(rg.trains) == 298
+
+
+RailGrid_filter_data = [
+    ['IC 2045', None, None, 1],
+    ['IC', None, None, 272],
+    [None, True, None, 2069],
+    [None, None, True, 300],
+    [None, True, True, 2369]
+]
+
+@responses.activate
+@pytest.mark.parametrize('pattern, regional, national, count',
+                         RailGrid_filter_data)
+def test_RailGrid_filter(pattern, regional, national, count):
+    for tile in range(1, 24):
+        responses.add(responses.GET, tile_url(tile), json=mock(tile),
+                      match_querystring=True)
+    rg = RailGrid()
+ 
+    # test filter
+    assert len(rg.filter(pattern, national, regional)) == count
 
 
 @responses.activate

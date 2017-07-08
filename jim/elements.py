@@ -82,7 +82,7 @@ class Station:
         return '<{}>'.format(template)
 
 
-class Connection:
+class Train:
     def __init__(self, connection):
         """Initialises a train connection.
 
@@ -98,8 +98,17 @@ class Connection:
             delay (int): Delay in minutes. `None` means not available.
             direction (str): Final station's name.
         """
+        regional = {8: 'RB / RE', 16: 'S', 16392: 'RB / RE/ NEG'}
+        national = {1: 'ICE', 2: 'IC / EC / CNL', 4: 'EN', 16386: 'EC', 16388: 'EC'}
+
+        self.train_class = connection[5]
+        self.regional = self.train_class in regional
+        self.national = self.train_class in national
+
         self.name = connection[0]
         self.train_link = connection[3]
+        self.lat = connection[1]
+        self.lon = connection[2]
         self.previous_station = Station(connection[10],
                                         connection[9],
                                         previous=True,
@@ -144,3 +153,23 @@ def uniq(trains):
             seen.add(train.train_link)
             result.append(train)
     return result
+
+
+# FIXME: WRITE TEST
+def calc_ckv(tile_count):
+    """Returns CKV for tile.
+    
+    Args:
+        tile_count (int): Count of entries in tile JSON (without last item).
+    """
+    ymd = int(pendulum.now(tz='Europe/Berlin').format('%Y%m%d'))
+    return 22222 + ((ymd+tile_count) % 22222)
+
+
+# FIXME: WRITE TEST
+def sign(val, ckv):
+    return ckv * (val % ckv) + int(val/ckv)
+
+
+def to_coord(val):
+    return val/1000000

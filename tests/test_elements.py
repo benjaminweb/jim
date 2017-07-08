@@ -4,7 +4,8 @@ import pendulum
 import responses
 
 from jim.elements import (hmins2epoch, sanitise_name, split_name,
-                          get_delay, Station, Connection, uniq)
+                          get_delay, Station, Train, uniq,
+                          calc_ckv, sign, to_coord)
 
 from tests.test_trains import mock
 
@@ -50,7 +51,7 @@ connections = [
                   2, '0', 'Basel SBB', [], 'Zürich HB', '8503000',
                   'Basel SBB', '8500010', '01.07.17', '-1', None, '19:32',
                   '18:34', None, '0', '4', None, None],
-                 0, None],
+                 0, None, False],
                 [['ICE  376', 1411364960, 720056790, '84/330686/18/19/80', '7',
                   1, '0', 'Frankfurt(Main)Hbf',
                   [
@@ -71,7 +72,7 @@ connections = [
                   'Karlsruhe Hbf', '8000191', 'Mannheim Hbf',
                   '8000244', '01.07.17', '147', None,
                   '19:10', '18:48', '0', '0', '2', None, None],
-                 0, 0],
+                 0, 0, False],
                 [['ICE  729', 23526725, 764310905,
                   '84/122384/18/19/80', '28', 1, '', 'München Hbf',
                   [
@@ -107,16 +108,36 @@ connections = [
                   'Frankfurt(M) Flughafen Fernbf',
                   '8070003', '01.07.17', '-1', None, '19:33', '18:44',  None,
                  None, '4', None, None],
-                 None, None]
+                 None, None, False],
+                [['RB 38735', 1093674136, 741917159, '84/322819/18/19/80',
+                  '29', 8, '7', 'Bensheim',
+                  [
+                   [0, 0, -42000, '', '0', None, None],
+                   [0, 0, 6000, '', '0', '0', '2'],
+                   [0, 0, 6236, '29', '91', '0', '3'],
+                   [1169, -449, 10097, '29', '90', '0', '4'],
+                   [3524, -1393, 17976, '29', '91', None, None],
+                   [5879, -2328, 25816, '29', '90', '0', '6'],
+                   [7057, -2796, 29755, '29', '89', '0', '8'],
+                   [7650, -3020, 31725, '29', '91', '0', '9'],
+                   [8252, -3245, 33695, '29', '89', None, None],
+                   [8872, -3443, 35665, '', '0', None, None]],
+                  'Ludwigshafen-Oggersheim', '8003766',
+                  'Ludwigshafen(Rh)Hbf', '8000236',
+                  '07.07.17', '2', None, '12:37', '12:32',
+                  '7', '7', '0', None, None],
+                7, 7, True]
 ]
 
 
-@pytest.mark.parametrize('connection, delay, next_station_delay', connections)
-def test_connection(connection, delay, next_station_delay):
-    the_conn = Connection(connection)
-    assert the_conn.delay == delay
-    assert the_conn.next_station.delay == next_station_delay
-    assert the_conn.train_link == connection[3]
+@pytest.mark.parametrize('connection, delay, next_station_delay,'
+                         'regional', connections)
+def test_Train(connection, delay, next_station_delay, regional):
+    train = Train(connection)
+    assert train.delay == delay
+    assert train.next_station.delay == next_station_delay
+    assert train.train_link == connection[3]
+    assert train.regional == regional
 
 
 @responses.activate
@@ -132,7 +153,7 @@ def test_connection_details():
                   '18',  4,  '0', 'Zürich HB', [], 'Linz Hbf', '8100013',
                   'Salzburg Hbf', '8100002', '05.07.17', '-1', None,
                   '2:10', '1:05',  '0', '0',  '4', None, None]
-    the_conn = Connection(connection)
+    the_conn = Train(connection)
     print(the_conn.details())
     assert the_conn.details() == {
        'trainid': '84/225078/18/19/80', 'x': '14292129', 'y': '48290178',
@@ -164,7 +185,7 @@ connection_repr = [
 
 @pytest.mark.parametrize('connection, the_repr', connection_repr)
 def test_connection_repr(connection, the_repr):
-    assert Connection(connection).__repr__() == the_repr
+    assert Train(connection).__repr__() == the_repr
 
 
 Station_data = [
@@ -196,17 +217,50 @@ def test_Station(id, name, previous, arrival,
 
 
 def test_uniq():
-    train1 = Connection(['IC 31080', 672208342, 862880166,
-                         '84/330741/18/19/80', '14', 2, '0',
-                         'Basel SBB', [], 'Zürich HB', '8503000',
-                         'Basel SBB', '8500010', '01.07.17', '-1',
-                         None, '19:32', '18:34', None, '0', '4', None, None])
-    train2 = Connection(['EC   258', 717899315, 695891371,
-                         '84/104456/18/19/80', '10', 2, '3',
-                         'Decin hl.n.', [], 'Praha-Holesovice', '5400201',
-                         'Usti nad Labem hl.n.', '5400019',  '01.07.17',
-                         '-1',  None,  '19:40',  '18:37',  None,  None,
-                         '4',  None,  None])
+    train1 = Train(['IC 31080', 672208342, 862880166,
+                    '84/330741/18/19/80', '14', 2, '0',
+                    'Basel SBB', [], 'Zürich HB', '8503000',
+                    'Basel SBB', '8500010', '01.07.17', '-1',
+                    None, '19:32', '18:34', None, '0', '4', None, None])
+    train2 = Train(['EC   258', 717899315, 695891371,
+                    '84/104456/18/19/80', '10', 2, '3',
+                    'Decin hl.n.', [], 'Praha-Holesovice', '5400201',
+                    'Usti nad Labem hl.n.', '5400019',  '01.07.17',
+                    '-1',  None,  '19:40',  '18:37',  None,  None,
+                    '4',  None,  None])
     trains = [train1, train2, train1, train1]
     expected = [train1, train2]
     assert uniq(trains) == expected
+
+
+calc_ckv_data = [
+    [1, 37577],
+    [2, 37578],
+    [5000, 42576],
+]
+
+
+@pytest.mark.parametrize('tile_count, ckv', calc_ckv_data)
+def test_calc_ckv(tile_count, ckv):
+    # create testing datetime
+    known = pendulum.create(2017, 7, 8, 12)
+    # set the mock
+    with pendulum.test(known):
+        assert calc_ckv(tile_count) == ckv
+
+
+sign_data = [
+    [37577, 672208342, 25259572867334],
+    [37577, 862880166, 32424447997782],
+    [42576, 717899315, 30565281235440],
+    [42576, 695891371, 29628271011696],
+]
+
+
+@pytest.mark.parametrize('value, ckv, expected', sign_data)
+def test_sign(value, ckv, expected):
+    assert sign(value, ckv) == expected
+
+
+def test_to_coord():
+    assert to_coord(1000000) == 1

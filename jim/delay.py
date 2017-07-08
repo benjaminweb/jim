@@ -1,23 +1,41 @@
 from jim.trains import RailGrid
 
 
-def delay_segments(regional=True, national=True,
-                   thresholds=[5, 15, 30, 60]):
+def get_delay_share(trains, threshold):
+    """Returns share of trains with delay greater or equal `threshold`.
+
+    Args:
+        trains (iterable[Connection]): Iterable holding trains.
+        threshold (number): Threshold greater or equal a delay must be
+          to be considered.
+    """
+    delayed = 0
+    with_data = 0
+    for train in trains:
+        if train.delay and train.delay >= threshold:
+            delayed += 1
+        with_data += 1
+    return delayed/with_data
+            
+   
+
+
+def delay_segments(GridObject, thresholds=[5, 15, 30, 60]):
     """Returns `dict` with delay thresholds mapping to share of trains with
     delay equal or more than that.
 
     Args:
-        regional (bool, default True): Include regional trains if `True`.
-        national (bool, default True): Include national trains if `True`.
+        GridObject (RailGrid): Object carrying trains.
         thresholds (list[int]): Delay minutes threshold to count trains for.
     """
-    trains = RailGrid(regional=regional, national=national).trains
-    with_data = list(filter(lambda t: t.delay, trains))
-    delayed = {threshold: list(filter(lambda t: t.delay >= threshold,
-                                      with_data)) for threshold in thresholds}
-    shares = {threshold: len(delayed[threshold])/len(with_data)
-              for threshold in delayed.keys()}
-    shares['coverage'] = len(with_data)/len(trains)
+    trains = GridObject.trains
+    delays = list(get_delays(trains))
+    ge_threshold = {threshold: list(filter(lambda d: d >= threshold,
+                                           delays))
+                    for threshold in thresholds}
+    shares = {threshold: len(ge_threshold[threshold])
+              for threshold in ge_threshold.keys()}
+    shares['coverage'] = len(delays)/len(trains)
     shares['trains'] = len(trains)
     return shares
 
@@ -43,10 +61,40 @@ def to_increments(shares):
 
 
 def get_thresholds(keys):
-    """Return non-str thresholds of iterable.
+    """Returns non-str thresholds of iterable.
 
     Args:
         keys (iterable): Iterable, that is the result of
           :func:`delay_segments.keys()`.
     """
     return sorted(list(filter(lambda x: not isinstance(x, str), keys)))
+
+
+def get_subset(values, lower=None, upper=None):
+    """Returns subset of values greater or equal `lower` and smaller `upper`.
+
+    Args:
+        values (iterable): Iterable of numeric values.
+        lower (number, default None): Lower bound (including) to filter values.
+        upper (number, default None): Upper bound (excluding) to filter values.
+    """
+    if lower is None:
+        subset = filter(lambda v: v < upper, values)
+    elif upper is None:
+        subset = filter(lambda v: v >= lower, values)
+    elif lower is not None and upper is not None:
+        subset = filter(lambda v: v >= lower and v < upper, values)
+    else:
+        subset = values
+    return list(subset)
+
+
+def get_delays(trains):
+    """Yields delays of trains where it is not `None`.
+
+    Args:
+        trains (iterable[Connection]): Iterable holding trains.
+    """
+    for train in trains:
+        if train.delay:
+            yield train.delay

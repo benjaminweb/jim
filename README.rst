@@ -25,21 +25,23 @@ To get all currently running national trains:
 .. code-block:: python
 
     >>> from jim.trains import RailGrid
-    >>> bahn = RailGrid
+    >>> bahn = RailGrid()
     >>> bahn
-    <263 trains>
+    <2195 trains>
 
 You can filter for specific trains::
 
+    >>> regs = bahn.filter(regional=True)
+    >>> nats = bahn.filter(national=True)
     >>> ices = bahn.filter('ICE')
 
 Let's pick an ICE::
 
     >>> an_ice = ices[-1]
     >>> an_ice
-    <ICE 1701 to Berlin Südkreuz>
+    <ICE 1086 to Berlin Südkreuz>
 
-Each train is a :class:`Connection` class.
+Each train is a :class:`Train` class.
 You can retrieve it's next station like::
 
     >>> an_ice.next_station
@@ -48,11 +50,12 @@ You can retrieve it's next station like::
 Similarly goes the previous station::
 
     >>> an_ice.previous_station
-    <Hamburg-Altona -> 20:20>
+    <20:24 -> Berlin-Spandau [+0]>
  
 If delay data is available, it will be stored here::
 
     >>> an_ice.delay
+    0
 
 .. note::
 
@@ -67,14 +70,12 @@ You can refresh a :class:`jim.trains.RailGrid` class::
 
     >>> bahn.refresh()
     >>> bahn
-    <254 trains>
+    <2260 trains>
 
-To enable regional trains::
+Credits
+=======
 
-    >>> bahn.refresh(regional=True)
-    >>> bahn
-    <3956 trains>
+ * https://github.com/makujaho/trainspotter/blob/master/trainspotter/train.py
+   https://media.ccc.de/v/MRMCD15-6986-i_like_trains#video&t=1454
+ * https://github.com/derhuerst/db-zugradar-client
 
-You can do that right away from the beginning with::
-
-    >>> bahn = RailGrid(regional=True)

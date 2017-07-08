@@ -7,8 +7,8 @@ import regex
 import backoff
 
 import urllib
-from jim.elements import (Connection, split_name, sanitise_name, uniq,
-                          get_train_details)
+from jim.elements import (Train, split_name, sanitise_name, uniq,
+                          calc_ckv, sign, to_coord, get_train_details)
 
 
 class TileError(Exception):
@@ -33,18 +33,25 @@ def get_tile(tile=1):
     url = ('http://www.apps-bahn.de/bin/livemap/query-livemap.exe/'
            'dny?L=vs_livefahrplan&performLocating=1&'
            'performFixedLocating={}'.format(tile))
-    trains = []
+    raw_trains = []
     rq = requests.get(url)
     connections = rq.content.decode('ISO-8859-1')
     connections = connections.replace('\\x', '\\u00').replace("\\\'", "\'")
-    for connection in json.loads(connections)[0][:-1]:
+    # remove last item
+    connections = json.loads(connections)[0][:-1]
+    tile_count = len(connections)
+    ckv = calc_ckv(tile_count)
+    for connection in connections:
         try:
-            trains.append(Connection(connection))
-        # skip those (train) `Connections` without a valid
+            # convert ordinal 1 and 2 to coords
+            connection[1] = to_coord(sign(connection[1], ckv))
+            connection[2] = to_coord(sign(connection[2], ckv))
+            raw_trains.append(connection)
+        # skip those (train) `Trains` without a valid
         # station_id (meta stuff?)
         except ValueError:
             pass
-    return trains
+    return raw_trains
 
 
 def list_append(tile, out_list):
@@ -52,79 +59,90 @@ def list_append(tile, out_list):
     out_list.extend(get_tile(tile))
 
 
+def collect_raw_trains():
+    """Returns all raw trains."""
+    raw_trains = []
+    jobs = []
+    for tile in range(1, 24):
+        thread = threading.Thread(target=list_append,
+                                  args=(tile, raw_trains))
+        jobs.append(thread)
+
+    # start the threads
+    for j in jobs:
+        j.start()
+
+    # ensure all jobs to be finished
+    for j in jobs:
+        j.join()
+    return raw_trains
+
+
 class RailGrid:
-    def __init__(self, regional=False, national=True):
+    def __init__(self, raw_trains=None):
         """Returns list of trains currently running with detailed information.
 
         Args:
-            regional (bool, default True): Includes regional trains if `True`.
-            national (bool, default True): Includes national,
-              meaning long distance trains if `True`.
+            raw_trains (list): Output of :func:`collect_raw_trains`.
         """
-        self.regional = regional
-        self.national = national
-        self.trains = self.pull_trains(self.regional,
-                                       self.national)
+        self.trains = self.pull_trains(raw_trains)
 
     def __repr__(self):
         return '<{} trains>'.format(len(self.trains))
 
-    def filter(self, name):
-        splitted = split_name(name)
-        # with number
-        if splitted[1]:
-            raw = r'{}\ *{}'.format(splitted[0], splitted[1])
-        # without number
-        else:
-            raw = r'{}.*'.format(splitted[0])
-        return list(filter(lambda t: regex.match(raw, t.name),
-                           self.trains))
-
-    def refresh(self, regional=None, national=None):
-        """Refresh trains.
+    def filter(self, pattern=None, national=None, regional=None):
+        """Filter for `pattern` in trains.
 
         Args:
-            regional (bool, default self.regional): Includes
-              regional trains if `True`.
-            national (bool, default self.national): Includes
-              national, meaning long distance trains if `True`.
+            pattern (str, default None): String to match train names.
+            national (bool, default None): Includes national,
+              meaning long distance trains if `True`.
+            regional (bool, default None): Includes regional trains if `True`.
         """
-        self.regional = regional if regional is not None else self.regional
-        self.national = national if national is not None else self.national
-        self.trains = self.pull_trains(self.regional, self.national)
+        if pattern:
+            splitted = split_name(pattern)
+            # with number
+            if splitted[1]:
+                raw = r'{}\ *{}'.format(splitted[0], splitted[1])
+            # without number
+            else:
+                raw = r'{}.*'.format(splitted[0])
+            selection = list(filter(lambda t: regex.match(raw, t.name),
+                                    self.trains))
+        else:
+            selection = list(self.trains)
 
-    def pull_trains(self, regional, national):
+        if national and regional:
+            pass
+        # filter nationals
+        elif national is not None:
+            selection = filter(lambda t: t.national is national, selection)
+        # filter regionals
+        elif regional is not None:
+            selection = filter(lambda t: t.regional is regional, selection)
+
+        return list(selection)
+
+    def refresh(self):
+        """Refresh trains."""
+        self.trains = self.pull_trains()
+
+    def pull_trains(self, raw_trains=None):
         """Returns train list.
 
         Args:
-            regional (bool, default True): Includes regional trains if `True`.
-            national (bool, default True): Includes national,
-              meaning long distance trains if `True`.
+            raw_trains (list): Output of :func:`collect_raw_trains`.
         """
         trains = []
-        national_trains = get_tile(1)
-        regional_trains = []
-        if regional:
-            jobs = []
-            for tile in range(2, 24):
-                thread = threading.Thread(target=list_append,
-                                          args=(tile, regional_trains))
-                jobs.append(thread)
-            # start the threads
-            for j in jobs:
-                j.start()
-            # ensure all jobs to be finished
-            for j in jobs:
-                j.join()
-            # pull regional trains in
-            trains.extend(regional_trains)
-        if national:
-            trains.extend(national_trains)
-        else:
-            nationals_to_remove = map(lambda x: x.name, national_trains)
-            for regional_train in regional_trains:
-                if regional_train.name in nationals_to_remove:
-                    regional_trains.remove(regional_train)
+        raw_trains = raw_trains or collect_raw_trains()
+        for raw_train in raw_trains:
+            try:
+                trains.append(Train(raw_train))
+            # raised if station_id is non-numeric which
+            # is the case for '' (those meta entries we
+            # want to drop anyways
+            except ValueError:
+                pass
         return uniq(trains)
 
 
