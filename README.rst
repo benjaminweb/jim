@@ -50,12 +50,12 @@ Each train is a `Train` class.
 You can retrieve its next station like::
 
     >>> an_ice.next_station
-    <20:26 -> Hamburg Dammtor>
+    <20:26 -> Hamburg Dammtor [+0]>
 
 Similarly goes the previous station::
 
     >>> an_ice.previous_station
-    <20:24 -> Berlin-Spandau [+0]>
+    <20:24 -> Berlin-Spandau>
  
 If delay data is available, it will be stored here::
 
@@ -66,7 +66,7 @@ If delay data is available, it will be stored here::
 
     Be aware many trains have a delay setting of `None`. Then, no data is available.
     Further, the delay of the next station `next_station.delay` is distinct from
-    the general delay.
+    the general delay (as shown before).
 
 Advanced
 ========
