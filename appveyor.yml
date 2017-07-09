@@ -17,6 +17,9 @@ environment:
     # See: http://stackoverflow.com/a/13751649/163740
     CMD_IN_ENV: 'cmd /E:ON /V:ON /C .\appveyor_env.cmd'
 
+    TWINE_USERNAME: bwe 
+    # Note: TWINE_PASSWORD is set in Appveyor settings
+
   matrix:
     - PYTHON_VERSION: 3.5
     - PYTHON_VERSION: 3.6
@@ -50,6 +53,11 @@ after_test:
   - python setup.py sdist bdist_wheel --dist-dir=dist
   # - pip wheel --global-option bdist_ext -w dist ./
   # from https://pip.pypa.io/en/stable/reference/pip_wheel/
+  - ps: >-
+      if ($env:APPVEYOR_REPO_TAG -eq "true") {
+        python -m pip install twine
+        python -m twine upload (resolve-path dist\*.whl)
+      }
 
 on_failure:
   - ps: dir "env:"
