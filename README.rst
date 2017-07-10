@@ -29,7 +29,7 @@ To get all currently running trains:
 
 .. code-block:: python
 
-    >>> from jim.trains import RailGrid
+    >>> from jim import RailGrid
     >>> bahn = RailGrid()
     >>> bahn
     <2195 trains>
@@ -71,7 +71,7 @@ If delay data is available, it will be stored here::
 Advanced
 ========
 
-You can refresh a `jim.trains.RailGrid` class::
+You can refresh a `jim.RailGrid` class::
 
     >>> bahn.refresh()
     >>> bahn
